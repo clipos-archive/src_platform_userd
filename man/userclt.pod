@@ -1,0 +1,110 @@
+=pod
+
+=head1 NAME
+
+userclt - command line interface to the user management daemon userd
+
+=head1 SYNOPSIS
+
+=over 12
+
+=item B<userclt> B<-S> F<sock> B<-L>
+
+=item B<userclt> B<-S> F<sock> B<-F>
+
+=item B<userclt> B<-S> F<sock> B<-a> B<-n> I<name> B<-t> I<type> [B<-s> I<size> [B<-b> I<size>]] 
+
+=item B<userclt> B<-S> F<sock> B<-d> B<-n> I<name>
+
+=item B<userclt> B<-S> F<sock> B<-l> B<-n> I<name> 
+
+=item B<userclt> B<-S> F<sock> B<-u> B<-n> I<name>
+
+=back
+
+=head1 DESCRIPTION
+
+B<userclt> is a dedicated client for communicating with the B<cryptd>
+daemon. It allows for all the user management operations provided by
+B<cryptd>: listing, adding, deleting, locking and unlocking accounts.
+
+=head1 OPTIONS
+
+B<userclt> supports the following options :
+
+=over 12
+
+=item B<-S> F<sock> [Mandatory]
+
+Connect to the F<sock> (path) socket to communicate with B<cryptd>.
+
+=item B<-L> 
+
+List the accounts present on the system.
+
+=item B<-F> 
+
+Give the free disk space available for new accounts.
+
+=item B<-a>
+
+Add a new account.
+
+=item B<-d>
+
+Delete an existing account.
+
+=item B<-l>
+
+Lock an existing account.
+
+=item B<-u>
+
+Unlock an existing account.
+
+=item B<-n> I<name>
+
+Use I<name> to identify the account to act upon, in case of operations
+on an existing account. In case of the add operation, specify the name
+of the new account.
+
+=item B<-t> I<type>
+
+Specify the type of the new account, which can be B<admin>, B<audit>,
+B<rmadmin> or B<user>.
+
+=item B<-s> I<size>
+
+Use total size for the new account. This option is only needed when
+creating a new user account.
+
+=item B<-b> I<size>
+
+Among the size given by the B<-s> option, reserve I<size> for the RM_B
+partition. This option is only needed when creating a new user
+account. The default will be to split the total size in two partitions
+of the same size, one for RM_B and one for RM_H.
+
+=item B<-v>
+
+Be more verbose in logging. This option can be passed several times for additional 
+effect, although at this point B<-vv> is as far as it goes in terms of verbosity.
+
+=item B<-h>
+
+Display a short help summary, and exit immediately.
+
+=back 
+
+=head1 AUTHOR 
+
+Olivier Levillain <L<clipos@ssi.gouv.fr>>
+
+(Thanks to Vincent Strubel <L<clipos@ssi.gouv.fr>> for the
+daemon / library architecture)
+
+=head1 SEE ALSO
+
+L<userd(8)|userd>
+ 
+=cut

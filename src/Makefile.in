@@ -1,0 +1,213 @@
+CLIENTLIB_MAJOR := 1
+CLIENTLIB_MINOR := 0
+CLIENTLIB_MICRO := 0
+CLIENTLIB_SHORT := userdc
+CLIENTLIB_NAME := lib${CLIENTLIB_SHORT}.so
+
+################# configure part ##############################
+CC = @CC@
+srcdir = @srcdir@
+SHELL = @SHELL@
+CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@ -lutil
+PREFIX = @prefix@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+sbindir = @sbindir@
+bindir = @bindir@
+libdir = @libdir@
+includedir = @includedir@
+build_server = @build_server@
+build_client = @build_client@
+with_rm = @with_rm@
+
+################# configure part ##############################
+
+SERVER_SRC := 		cmd.c \
+			user_server_aux.c \
+			user_server.c \
+			pkcs11_ops.c \
+			pam_check.c \
+			server.c
+
+CLIENTLIB_SRC := 	cmd.c \
+			user_client.c
+CLIENTLIB_INCLUDE :=	userd.h
+CLIENT_SRC := 	client.c
+
+SERVER := userd
+CLIENTLIB := ${CLIENTLIB_NAME}.${CLIENTLIB_MAJOR}.${CLIENTLIB_MINOR}.${CLIENTLIB_MICRO}
+CLIENTLIB_SHORTVER := ${CLIENTLIB_NAME}.${CLIENTLIB_MAJOR}
+CLIENTLIB_NOVER := ${CLIENTLIB_NAME}
+CLIENT := userd-client
+HELPERS := userd_key_helper userd_create_ssh_keys userd_delete_ssh_keys
+
+cryptpasswd_SRC = cryptpasswd.c
+cryptpasswd_LDFLAGS = -lcrypt
+
+EXES :=
+SBIN_EXES :=
+BIN_EXES :=
+LIBS :=
+INCLUDES :=
+
+ifeq (${build_server}, yes)
+EXES += ${SERVER} cryptpasswd
+BIN_EXES += cryptpasswd
+SBIN_EXES += ${SERVER} ${HELPERS}
+endif
+ifeq (${build_client}, yes)
+EXES += ${CLIENT}
+BIN_EXES += ${CLIENT}
+LIBS += ${CLIENTLIB} 
+INCLUDES += ${CLIENTLIB_INCLUDE}
+endif
+
+CFLAGS ?= -pipe -O2 -Wall -Wextra -fomit-frame-pointers -Wcast-qual -Wstrict-prototypes -Werror -fno-common
+CFLAGS += -DSBINDIR=\"${sbindir}\"
+
+LDFLAGS ?= -Wl,-z,now -Wl,-z,relro
+
+test_fork_exec_SRC :=	test_fork_exec.c \
+			cmd.c \
+			user_server_aux.c
+TEST_EXES := test_fork_exec
+
+
+.PHONY: all 
+
+all: build
+
+###############################################################
+ifndef VERBOSE
+MAKEFLAGS += -s --no-print-directory
+ECHO = echo
+else 
+ECHO = echo > /dev/null
+endif
+
+OBJS_DIR ?= obj
+LOBJS_DIR ?= lobj
+SERVER_OBJFILES := ${foreach file, ${patsubst %.c,%.o,${SERVER_SRC}}, ${OBJS_DIR}/${file}}
+test_fork_exec_OBJFILES := ${foreach file, ${patsubst %.c,%.o,${test_fork_exec_SRC}}, ${OBJS_DIR}/${file}}
+cryptpasswd_OBJFILES := ${foreach file, ${patsubst %.c,%.o,${cryptpasswd_SRC}}, ${OBJS_DIR}/${file}}
+CLIENTLIB_OBJFILES := ${foreach file, ${patsubst %.c,%.o,${CLIENTLIB_SRC}}, ${LOBJS_DIR}/${file}}
+CLIENT_OBJFILES := ${foreach file, ${patsubst %.c,%.o,${CLIENT_SRC}}, ${OBJS_DIR}/${file}}
+
+DEPS_DIR = ${OBJS_DIR}/.deps
+LDEPS_DIR = ${LOBJS_DIR}/.deps
+SERVER_DEPFILES := ${foreach file, ${basename ${SERVER_SRC}}, ${DEPS_DIR}/${file}.d}
+test_fork_exec_OBJFILES := ${foreach file, ${patsubst %.c,%.o,${test_fork_exec_SRC}}, ${OBJS_DIR}/${file}}
+cryptpasswd_OBJFILES := ${foreach file, ${patsubst %.c,%.o,${cryptpasswd_SRC}}, ${OBJS_DIR}/${file}}
+CLIENTLIB_DEPFILES := ${foreach file, ${basename ${CLIENTLIB_SRC}}, ${LDEPS_DIR}/${file}.d}
+CLIENT_DEPFILES := ${foreach file, ${basename ${CLIENT_SRC}}, ${DEPS_DIR}/${file}.d}
+
+OBJFILES := ${SERVER_OBJFILES} ${CLIENT_OBJFILES} ${CLIENTLIB_OBJFILES}
+DEPFILES := ${SERVER_DEPFILES} ${CLIENT_DEPFILES} ${CLIENTLIB_DEPFILES}
+
+###############################################################
+.PHONY: build clean mrproper maintainer-clean
+
+${OBJS_DIR}:
+	mkdir -p ${OBJS_DIR}
+
+${LOBJS_DIR}:
+	mkdir -p ${LOBJS_DIR}
+
+${LDEPS_DIR}:
+	mkdir -p ${LDEPS_DIR}
+
+${DEPS_DIR}:
+	mkdir -p ${DEPS_DIR}
+
+${OBJS_DIR}/%.o:%.c Makefile 
+	@${ECHO} "        CC                $<"
+	$(CC) $(CFLAGS) $(IFLAGS) -MT $@ -MD -MP -MF ${DEPS_DIR}/$*.d -c -o $@ $<
+
+${LOBJS_DIR}/%.o:%.c Makefile 
+	@${ECHO} "        CC (PIC)          $<"
+	$(CC) $(CFLAGS) $(IFLAGS) -fPIC -MT $@ -MD -MP -MF ${LDEPS_DIR}/$*.d -c -o $@ $<
+
+${SERVER}: ${SERVER_OBJFILES}
+	@${ECHO} "        LD                $@"
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lclip -ldl -lp11 -lpam -lcrypto
+
+cryptpasswd: ${cryptpasswd_OBJFILES}
+	@${ECHO} "        LD                $@"
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(cryptpasswd_LDFLAGS)
+
+test_fork_exec: ${test_fork_exec_OBJFILES}
+	@${ECHO} "        LD                $@"
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lclip
+
+${CLIENTLIB}: ${CLIENTLIB_OBJFILES}
+	@${ECHO} "        LD                $@"
+	$(CC) $(CFLAGS) -shared -Wl,-soname,${CLIENTLIB_SHORTVER} -o $@ $^ $(LDFLAGS)
+
+${CLIENTLIB_SHORTVER}: ${CLIENTLIB}
+	ln -sf ${CLIENTLIB} ${CLIENTLIB_SHORTVER}
+
+${CLIENTLIB_NOVER}: ${CLIENTLIB}
+	ln -sf ${CLIENTLIB} ${CLIENTLIB_NOVER}
+
+${CLIENT}: ${CLIENT_OBJFILES} ${CLIENTLIB_NOVER}
+	@${ECHO} "        LD                $@"
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lclip -L. -l${CLIENTLIB_SHORT}
+
+build: ${OBJS_DIR} ${DEPS_DIR} ${LOBJS_DIR} ${LDEPS_DIR} ${EXES} ${LIBS}
+
+install: build
+	list='$(SBIN_EXES)'; for exe in $$list; do \
+		${ECHO} "        INST              ${DESTDIR}${sbindir}/$$exe" ;\
+		install -D $$exe ${DESTDIR}${sbindir}/$$exe ;\
+	done
+	list='$(BIN_EXES)'; for exe in $$list; do \
+		${ECHO} "        INST              ${DESTDIR}${bindir}/$$exe" ;\
+		install -D $$exe ${DESTDIR}${bindir}/$$exe ;\
+	done
+	list='$(LIBS)'; for lib in $$list; do \
+		${ECHO} "        INST              ${DESTDIR}${libdir}/$$lib" ;\
+		install -D $$lib ${DESTDIR}${libdir}/$$lib ;\
+		${ECHO} "        LN                ${DESTDIR}${libdir}/$${lib%.[0-9]*.[0-9]*}" ;\
+		ln -sf $$lib ${DESTDIR}${libdir}/$${lib%.[0-9]*.[0-9]*} ;\
+		${ECHO} "        LN                ${DESTDIR}${libdir}/$${lib%%.so*}.so" ;\
+		ln -sf $$lib ${DESTDIR}${libdir}/$${lib%%.so*}.so ;\
+	done
+	list='$(INCLUDES)'; for inc in $$list; do \
+		${ECHO} "        INST              ${DESTDIR}${includedir}/userd/$$inc" ;\
+		install -D $$inc ${DESTDIR}${includedir}/userd/$$inc ;\
+	done
+
+uninstall: 
+	list='$(SBIN_EXES)'; for exe in $$list; do \
+		${ECHO} "        RM                ${DESTDIR}${sbindir}/$$exe" ;\
+		rm -f  ${DESTDIR}${sbindir}/$$exe ;\
+	done
+	list='$(BIN_EXES)'; for exe in $$list; do \
+		${ECHO} "        RM                ${DESTDIR}${bindir}/$$exe" ;\
+		rm -f  ${DESTDIR}${bindir}/$$exe ;\
+	done
+	list='$(LIBS)'; for lib in $$list; do \
+		${ECHO} "        RM                ${DESTDIR}${libdir}/$$lib" ;\
+		rm -f ${DESTDIR}${libdir}/$$lib ;\
+	done
+	list='$(INCLUDES)'; for inc in $$list; do \
+		${ECHO} "        RM                ${DESTDIR}${includedir}/userd/$$inc" ;\
+		rm -f ${DESTDIR}${includedir}/userd/$$inc ;\
+	done
+
+clean:
+	@${ECHO} "        CLEAN            ${EXES} ${LIBS} ${OBJFILES}"
+	rm -f ${EXES} ${OBJFILES} ${DEPFILES} ${LIBS}
+
+mrproper: clean
+	rmdir ${DEPS_DIR} ${OBJS_DIR} ${LDEPS_DIR} ${LOBJS_DIR}
+	rm -f Makefile
+
+test:	${TEST_EXES}
+	list='$(TEST_EXES)'; for exe in $$list; do \
+		${ECHO} "        TEST                $$exe" ;\
+		./$$exe; \
+	done
+
+-include ${DEPFILES}

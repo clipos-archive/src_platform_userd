@@ -1,0 +1,27 @@
+#!/bin/sh
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# Copyright © 2009-2018 ANSSI. All Rights Reserved.
+
+USERKEYS_LOG_FACILITY="daemon"
+source /lib/clip/userkeys.sub || exit 1
+
+AWK=/bin/awk
+
+case "${1}" in
+    "hash_password")
+	hash_password "${2}" || exit 1
+	;;
+    "create_settings")
+	create_settings "${2}" "${3}" || exit 1
+	;;
+    "encrypt_stage2_key")
+	encrypt_stage2_key "${2}" "${3}" "${4}" "${5}" || exit 1
+	;;
+    "output_stage2_key")
+	output_stage2_key "${2}" "${3}" "${4}" || exit 1
+	;;
+    "*")
+	exit 1;
+esac
+
+exit 0;

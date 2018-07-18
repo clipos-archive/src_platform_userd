@@ -1,0 +1,76 @@
+=pod
+
+=head1 NAME
+
+userd - local user management daemon.
+
+=head1 SYNOPSIS
+
+=over 12
+
+=item B<userd> [B<-vhF>] B<-s> F<socket>
+
+=back
+
+=head1 DESCRIPTION
+
+B<userd> is a daemon that listens on a UNIX socket, providing
+facilities to manage CLIP user accounts. The supported operations are
+listing the accounts present on the system, adding, deleting, locking,
+and unlocking an account. Another useful operation is checking how
+much space is still available for new accounts.
+
+=over 12
+
+=item I<account types>
+
+Each account is qualified by a name, a type, and partitions.
+
+There are four types of accounts in a CLIP system: administrator,
+auditor, RM jails administrator, and user.
+
+The partition size is fixed for all accounts except for user
+accounts. It is therefore needed to specify the size of the disk space
+allocated to them, in RM_H and RM_B jails.
+
+
+=head1 OPTIONS
+
+B<userd> supports the following options :
+
+=over 12
+
+=item B<-s> F<socket> [Mandatory]
+
+Bind the socket on path F<socket>
+
+=item B<-F>
+
+Run the daemon in foreground, with logging messages written to the standard output. 
+By default, the daemon detaches from its controlling terminal at startup, and logs
+through the syslog I<LOG_DAEMON> facility.
+
+=item B<-v>
+
+Be more verbose in logging. This option can be passed several times for additional 
+effect, although at this point B<-vv> is as far as it goes in terms of verbosity.
+
+=item B<-h>
+
+Display a short help summary, and exit immediately.
+
+=back
+
+=head1 AUTHOR 
+
+Olivier Levillain <L<clipos@ssi.gouv.fr>>
+
+(Thanks to Vincent Strubel <L<clipos@ssi.gouv.fr>> for the
+daemon / library architecture)
+
+
+=head1 SEE ALSO
+
+L<userclt(8)|userclt>
+ 
+=cut

@@ -1,0 +1,98 @@
+#!/bin/sh
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# Copyright © 2009-2018 ANSSI. All Rights Reserved.
+
+# userd helper to remove a user's ssh keys from various
+# authorized_keys files, based on the user type.
+# Usage: <script> <user name> <user type> 
+# Copyright (C) 2014 SGDSN/ANSSI
+# Author: Vincent Strubel <clipos@ssi.gouv.fr>
+# All rights reserved.
+
+log() {
+	logger -p daemon.info "userd_delete_ssh_keys: ${1}"
+}
+
+warn() {
+	logger -p daemon.warning "userd_delete_ssh_keys: ${1}"
+}
+
+error() {
+	warn "${1}"
+	exit 1
+}
+
+# Config file should define an associative array matching user
+# types to paths where user pubkeys should be appended to .ssh/authorized_keys
+# ex: 
+# declare -A PUBKEY_COPIES=(
+#	[admin]="/home/adminclip"
+#	[godzilla]="/home/adminclip /home/auditclip /home/godzilla"
+#	...
+# )
+source "/etc/conf.d/user-ssh"
+
+NAME="${1}"
+TYPE="${2}"
+
+[[ -n "${TYPE}" ]] || error "missing arguments"
+
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+
+umask 0077
+
+DESTS="${PUBKEY_COPIES[${TYPE}]}"
+
+remove_pubkey() {
+	local d="${1}"
+	local keyfile="${d}/.ssh/authorized_keys"
+
+	[[ -d "${d}/.ssh" ]] || return 0 # WTF ?
+	[[ -e "${keyfile}" ]] || return 0 # Really, WTF ?
+
+	local tmpfile="$(mktemp "/tmp/authorized_keys.XXXXXXXX")"
+	if ! [[ -n "${tmpfile}" ]]; then
+		warn "Failed to create temporary file for user ${NAME}"
+		return 1
+	fi
+
+	if ! grep -v "${NAME}@clip" "${keyfile}" > "${tmpfile}"; then
+		warn "Failed to remove ${NAME}@clip from ${keyfile}"
+		return 1
+	fi
+
+	if ! mv "${tmpfile}" "${keyfile}"; then
+		warn "Failed to update ${keyfile} to remove user ${NAME}"
+		return 1
+	fi
+	
+	# Should be root:root 0644
+	if ! chown root:root "${keyfile}"; then
+		warn "Failed to chown ${keyfile} after removing user ${NAME}"
+		return 1
+	fi
+	if ! chmod 644 "${keyfile}"; then
+		warn "Failed to chmod ${keyfile} after removing user ${NAME}"
+		return 1
+	fi
+
+	return 0
+}
+
+RET=0
+if [[ -n "${DESTS}" ]]; then
+	for DEST in $DESTS; do
+		if ! remove_pubkey "${DEST}"; then
+			warn "Failed to remove public key for user ${NAME} from ${DEST}"
+			RET=1
+		fi
+	done
+fi
+
+if [[ $RET -eq 0 ]]; then
+	log "SSH public keys deleted for user ${NAME}, type ${TYPE}"
+else
+	warn "Some SSH public keys could not be deleted for user ${NAME}, type ${TYPE}"
+fi
+
+exit $RET

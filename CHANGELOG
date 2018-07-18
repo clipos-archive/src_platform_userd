@@ -1,0 +1,242 @@
+# CLIP ChangeLog for app-clip/userd-server
+
+*userd-server-1.3.5 (26 Aug 2014)
+
+  26 Aug 2014; Tony Cheneau <clipos@ssi.gouv.fr>
+  +userd-server-1.3.5.ebuild, -userd-server-1.3.4.ebuild:
+  Fix due a change of behavior of the last command. This command is used for
+  determining who current user is. Username longer than 8 characters cannot be
+  recognized because of a (now) default 8 characters truncation in the command.
+
+*userd-server-1.3.4 (07 Aug 2014)
+
+  07 Aug 2014; Yves-Alexis Perez <clipos@ssi.gouv.fr>
+  +userd-server-1.3.4.ebuild, -userd-server-1.3.3.ebuild:
+  Fix build failure on amd64.
+
+*userd-server-1.3.3 (06 May 2014)
+
+  06 May 2014; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.3.3.ebuild, -userd-server-1.3.2.ebuild,
+  +files/pam.d/userd-passwd, +ifles/pam.d/userd-pkcs:
+  Switch to PAM-based check for password strength.
+
+*userd-server-1.3.2 (20 Mar 2014)
+
+  20 Mar 2014; ANSSI <clipos@ssi.gouv.fr>
+  +userd-server-1.3.2.ebuild, -userd-server-1.3.1-r2.ebuild:
+  Bump userd package.
+
+*userd-server-1.3.1-r2 (12 Feb 2014)
+
+  12 Feb 2014; ANSSI <clipos@ssi.gouv.fr>
+  +userd-server-1.3.1-r2.ebuild, -userd-server-1.3.1-r1.ebuild:
+  Moved pam_pkcs11 generation to pkcs11-proxy package.
+
+*userd-server-1.3.1-r1 (11 Feb 2014)
+
+  11 Feb 2014; ANSSI <clipos@ssi.gouv.fr>
+  +userd-server-1.3.1-r1.ebuild, -userd-server-1.3.1.ebuild:
+  New configuration scheme for smartcard users.
+
+*userd-server-1.3.1 (11 Feb 2014)
+
+  11 Feb 2014; ANSSI <clipos@ssi.gouv.fr>
+  +userd-server-1.3.1.ebuild, -userd-server-1.3.0.ebuild:
+  Fix access rights to subject_mapping (umask pb).
+
+*userd-server-1.3.0 (02 Jan 2014)
+
+  02 Jan 2014; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.3.0.ebuild, -userd-server-1.2.0-r2.ebuild,
+  +files/user-ssh:
+  Make user SSH key creation configurable through /etc/conf.d/user-ssh.
+
+*userd-server-1.2.0-r2 (14 Oct 2013)
+
+  14 Oct 2013; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.2.0-r2.ebuild, -userd-server-1.2.0-r1.ebuild,
+  -files/userd, +files/userd.start, +files/userd.stop,
+  -files/_debian:
+  Replace initd script with local.d snippets.
+
+*userd-server-1.2.0-r1 (14 Oct 2013)
+
+  14 Oct 2013; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.2.0-r1.ebuild, -userd-server-1.2.0.ebuild,
+  files/userd, +files/_debian/postinst, +files/_debian/prerm:
+  Use start-stop-daemon in init script for better compatibility
+  with openrc.
+
+  10 May 2013; Vincent Strubel <clipos@ssi.gouv.fr>
+  userd-server-1.2.0.ebuild:
+  Do not install the init.d script on livecd configs.
+
+*userd-server-1.2.0 (19 Apr 2013)
+
+  19 Apr 2013; Yves-Alexis Perez <clipos@ssi.gouv.fr>
+  +userd-server-1.2.0.ebuild, -userd-server-1.1.14.ebuild:
+  Use posix_fallocate() for creating partition files.
+  Switch to ext4 as filesystem for those partitions.
+
+  16 Apr 2013; Mickaël Salaün <clipos@ssi.gouv.fr>
+  userd-server-1.1.14.ebuild:
+  Add TCB dependency.
+
+*userd-server-1.1.14 (28 Mar 2013)
+
+  28 Mar 2013; ANSSI <clipos@ssi.gouv.fr>
+  +userd-server-1.1.14.ebuild, -userd-server-1.1.13.ebuild:
+  Changed certificate labels for encryption and authentication.
+
+*userd-server-1.1.13 (25 Mar 2013)
+
+  25 Mar 2013; ANSSI <clipos@ssi.gouv.fr>
+  +userd-server-1.1.13.ebuild, -userd-server-1.1.12.ebuild:
+  Support migrating user to smartcard authentication.
+
+*userd-server-1.1.12 (20 Nov 2012)
+
+  20 Nov 2012; ANSSI <clipos@ssi.gouv.fr>
+  +userd-server-1.1.12.ebuild, -userd-server-1.1.11-r1.ebuild:
+  Updated userd to select first non-empty slot (PKCS11).
+
+*userd-server-1.1.11-r1 (19 Oct 2012)
+
+  19 Oct 2012; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.11-r1.ebuild, -userd-server-1.1.11.ebuild:
+  Force rebuild - libp11 revdep.
+
+*userd-server-1.1.11 (20 Jun 2012)
+
+  20 Jun 2012; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.11.ebuild, -userd-server-1.1.10.ebuild:
+  Bump to follow client upgrade, for a change.
+
+*userd-server-1.1.10 (11 Apr 2012)
+
+  11 Apr 2012; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.10.ebuild, -userd-server-1.1.9.ebuild:
+  Fix error path when failing to create a user.
+
+*userd-server-1.1.9 (14 Mar 2012)
+
+  14 Mar 2012; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.9.ebuild, -userd-server-1.1.8.ebuild:
+  When creating a privileged user, create .ssh/known_hosts
+  as a symlink rather than as a regular file.
+
+*userd-server-1.1.8 (21 Oct 2011)
+
+  21 Oct 2011; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.8.ebuild, -userd-server-1.1.7.ebuild:
+  Generalize 'relaxed' mode initially introduced for use by
+  postinst scripts from the installer livecd environment. We
+  no longer error out when the current user is not found, since
+  this happens quite frequently when calling userd over the 
+  network (admin port or admin gateway). The -r option is kept
+  for backwards compatibility with scripts, but no longer 
+  does anything.
+
+*userd-client-1.1.7 (02 Fev 2011)
+
+  02 Fev 2011; Benjamin Morin <clipos@ssi.gouv.fr>
+  +userd-client-1.1.7.ebuild, -userd-client-1.1.6.ebuild:
+  Modified the permissions of subject_mapping file (o+r) for
+  pwcheckd to read it.
+
+
+*userd-server-1.1.6 (14 Jan 2011)
+
+  14 Jan 2011; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.6.ebuild, -userd-server-1.1.5.ebuild:
+  Fix password change. Tell userkeys.sub to log through 
+  syslog.
+
+*userd-server-1.1.5 (13 Jan 2011)
+
+  13 Jan 2011; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.5.ebuild, -userd-server-1.1.4.ebuild:
+  Do not error out in relaxed mode when no user accounts 
+  are found while listing users.
+
+*userd-server-1.1.4 (04 Jan 2011)
+
+  04 Jan 2011; Benjamin Morin <clipos@ssi.gouv.fr>
+  +userd-server-1.1.4.ebuild, -userd-server-1.1.3.ebuild:
+  Fixed a bug in the function that creates a smartcard-authenticated user.
+
+*userd-server-1.1.3 (17 Dec 2010)
+
+  17 Dec 2010; Benjamin Morin <clipos@ssi.gouv.fr>
+  +userd-server-1.1.3.ebuild, -userd-server-1.1.2.ebuild:
+  Add pkauth user creation and support for changing the 
+  pincode.
+
+*userd-server-1.1.2 (04 Nov 2010)
+
+  04 Nov 2010; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.2.ebuild, -userd-server-1.1.1.ebuild:
+  Bump username length to 32 chars.
+  Fix rmh/rmb sizes for ADMIN/AUDIT users.
+
+*userd-server-1.1.1 (02 Sep 2010)
+
+  02 Sep 2010; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.1.ebuild, -userd-server-1.1.0.ebuild:
+  Add "relaxed" option for use from the livecd.
+
+*userd-server-1.1.0 (04 Aug 2010)
+
+  04 Aug 2010; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.1.0.ebuild, -userd-server-1.0.ebuild:
+  Add some support for PKCS#11 auth. User creation is not 
+  supported yet.
+
+*userd-server-1.0 (29 Jan 2010)
+
+  29 Jan 2010; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-1.0.ebuild, -userd-server-0.4.ebuild,
+  files/userd:
+  Make RM jails support a runtime option, based on the contents
+  of /etc/conf.d/clip. This also allows us to support a single
+  RM jail if needed.
+  Fix password change / user delete for ADMIN / AUDIT accounts.
+
+*userd-server-0.4 (02 Nov 2009)
+
+  02 Nov 2009; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-0.4.ebuild, -userd-server-0.3-r1.ebuild:
+  Add 'nomad' user type.
+
+*userd-server-0.3-r1 (11 Sep 2009)
+
+  11 Sep 2009; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-0.3-r1.ebuild, -userd-server-0.3.ebuild:
+  Fix verictl entry.
+
+*userd-server-0.3 (10 Sep 2009)
+
+  10 Sep 2009; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-0.3.ebuild, -userd-server-0.2.ebuild:
+  Fork on each new connection to separate sensitive data in
+  memory. Drop privs if appropriate. Smallish fixes to error
+  transmission to client.
+
+*userd-server-0.2 (10 Sep 2009)
+
+  10 Sep 2009; Vincent Strubel <clipos@ssi.gouv.fr>
+  +userd-server-0.2.ebuild, -userd-server-0.1.ebuild,
+  files/userd:
+  Add password changing support on a second socket (created
+  in USERclip).
+
+  09 Sep 2009; Vincent Strubel <clipos@ssi.gouv.fr>
+  userd-server-0.1.ebuild:
+  Add conflict against clip-useradmin : both provide /usr/sbin/cryptpasswd.
+
+*userd-server-0.1 (08 Sep 2009)
+
+  08 Sep 2009; Olivier Levillain <clipos@ssi.gouv.fr>
+  userd-server-0.1.ebuild:
+  Initial import.

@@ -1,0 +1,108 @@
+#!/bin/sh
+# SPDX-License-Identifier: LGPL-2.1-or-later
+# Copyright © 2009-2018 ANSSI. All Rights Reserved.
+
+# userd helper to create a user's ssh keys, based on user type
+# Usage: <script> <user name> <user type> <base directory> (where 
+# the user's future HOME should be mounted)
+# Copyright (C) 2014 SGDSN/ANSSI
+# Author: Vincent Strubel <clipos@ssi.gouv.fr>
+# All rights reserved.
+
+log() {
+	logger -p daemon.info "userd_create_ssh_keys: ${1}"
+}
+
+warn() {
+	logger -p daemon.warning "userd_create_ssh_keys: ${1}"
+}
+
+cleanup() {
+	[[ -n "${BASEDIR}" ]] || return 0
+
+	rm -rf "${BASEDIR}/.ssh"
+}
+
+error() {
+	warn "${1}"
+	cleanup
+	exit 1
+}
+
+# Config file should define an associative array matching user
+# types to paths where user pubkeys should be appended to .ssh/authorized_keys
+# ex: 
+# declare -A PUBKEY_COPIES=(
+#	[admin]="/home/adminclip"
+#	[godzilla]="/home/adminclip /home/auditclip /home/godzilla"
+#	...
+# )
+source "/etc/conf.d/user-ssh"
+
+NAME="${1}"
+TYPE="${2}"
+BASEDIR="${3}"
+
+[[ -n "${BASEDIR}" ]] || error "missing arguments"
+
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+
+trap cleanup SIGHUP SIGINT SIGQUIT SIGABRT SIGKILL SIGALRM SIGTERM
+
+umask 0077
+
+USER_UID="$(id -u "${NAME}")"
+USER_GID="$(id -g "${NAME}")"
+
+[[ -n "${USER_UID}" ]] || error "Unknown user: ${NAME}"
+[[ -n "${USER_GID}" ]] || error "Unknown user: ${NAME}"
+
+mkdir -p "${BASEDIR}/.ssh" || error "mkdir .ssh failed for user ${NAME}"
+
+ssh-keygen -t rsa -b 2048 -f "${BASEDIR}/.ssh/id_rsa" \
+	-C "${NAME}@clip" -N "" \
+	|| error "ssh-keygen failed for user ${NAME}"
+
+# TODO USER_GID ?
+chown -R "${USER_UID}" "${BASEDIR}/.ssh" \
+	|| error "chown ${USER_UID} failed for user ${NAME}"
+
+chmod 0400 "${BASEDIR}/.ssh/id_rsa" \
+	|| error "chmod failed for user ${NAME}"
+chmod 0400 "${BASEDIR}/.ssh/id_rsa.pub" \
+	|| error "chmod failed for user ${NAME}"
+chmod 0500 "${BASEDIR}/.ssh" \
+	|| error "chmod failed for user ${NAME}"
+
+DESTS="${PUBKEY_COPIES[${TYPE}]}"
+
+append_key() {
+	local d="${1}"
+
+	if [[ ! -d "${d}/.ssh" ]]; then
+		mkdir -p "${d}/.ssh" || return 1
+		chmod 755 "${d}/.ssh" || return 1
+	fi
+
+	if [[ ! -e "${d}/.ssh/authorized_keys" ]]; then
+		touch "${d}/.ssh/authorized_keys" || return 1
+		chmod 644 "${d}/.ssh/authorized_keys" || return 1
+	fi
+
+	cat "${BASEDIR}/.ssh/id_rsa.pub" \
+		>> "${d}/.ssh/authorized_keys" || return 1
+}
+
+if [[ -n "${DESTS}" ]]; then
+	for DEST in $DESTS; do
+		append_key "${DEST}" \
+			|| error "Failed to add public key to ${DEST} for user ${NAME}"
+	done
+		
+
+	ln -sf "/etc/known_hosts" "${BASEDIR}/.ssh/known_hosts" \
+		|| error "failed to link known_hosts for user ${NAME}"
+fi
+
+log "SSH keys created for user ${NAME}, type ${TYPE}"
+
